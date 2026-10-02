@@ -1,0 +1,30 @@
+{
+    "name": "pi-ms365-copilot",
+    "version": "0.1.0",
+    "description": "Microsoft 365 Copilot provider extension for pi",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/index.ts",
+    "exports": "./src/index.ts",
+    "pi": {
+        "extensions": [
+            "./src/index.ts"
+        ]
+    },
+    "scripts": {
+        "typecheck": "tsc"
+    },
+    "dependencies": {
+        "dotenv": "^16.6.1",
+        "ws": "^8.22.0"
+    },
+    "peerDependencies": {
+        "@mariozechner/pi-ai": "*",
+        "@mariozechner/pi-coding-agent": "*"
+    },
+    "devDependencies": {
+        "@types/node": "^24.5.2",
+        "@types/ws": "^8.18.2",
+        "typescript": "^5.9.2"
+    }
+}
