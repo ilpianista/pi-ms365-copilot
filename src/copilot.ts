@@ -1,4 +1,5 @@
 import WebSocket from "ws";
+import { attachmentLinks } from "./download.js";
 import { randomUUID } from "node:crypto";
 import type { CopilotTone } from "./models.js";
 
@@ -46,9 +47,11 @@ async function request(token: string, path: string, method: string, signal?: Abo
   return response.json();
 }
 
-/** Local prompt ceiling, not a discovered or verified server limit. */
+/** Optional local prompt ceiling, not a verified server limit. */
 export function getMaxTextMessageLength(): number {
-  const limit = Number(process.env.MS365_COPILOT_MAX_TEXT_MESSAGE_LENGTH ?? 6944);
+  const configured = process.env.MS365_COPILOT_MAX_TEXT_MESSAGE_LENGTH;
+  if (configured === undefined) return Infinity;
+  const limit = Number(configured);
   if (!Number.isSafeInteger(limit) || limit <= 0) {
     throw new Error("MS365_COPILOT_MAX_TEXT_MESSAGE_LENGTH must be a positive safe integer");
   }
@@ -150,8 +153,13 @@ export async function askCopilot(token: string, state: ConversationState, text: 
           const result = message.item?.result;
           if (result?.value && result.value !== "Success") throw new Error(`Copilot: ${result.value}`);
           for (const item of [...(message.arguments?.[0]?.messages ?? []), ...(message.item?.messages ?? [])]) {
-            if (item.author === "bot" && (!item.messageType || item.messageType === "Chat") && typeof item.text === "string") {
-              texts.set(item.messageId ?? item.id ?? "answer", item.text);
+            if (item.author === "bot" && (!item.messageType || item.messageType === "Chat")) {
+              // File links can be carried in adaptive cards rather than the plain text snapshot.
+              let answer = typeof item.text === "string" ? item.text : "";
+              const existing = new Set(attachmentLinks(answer).map(link => link));
+              const extra = attachmentLinks(JSON.stringify(item.adaptiveCards ?? [])).filter(link => !existing.has(link));
+              if (extra.length) answer += `\n\nCopilot attachments:\n${extra.join("\n")}`;
+              if (answer) texts.set(item.messageId ?? item.id ?? "answer", answer);
             }
           }
           if (message.type === 6) send({ type: 6 });

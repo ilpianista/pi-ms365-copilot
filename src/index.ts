@@ -5,8 +5,11 @@ import {
 import type { ExtensionAPI, ProviderConfig } from "@mariozechner/pi-coding-agent";
 import dotenv from "dotenv";
 import { randomUUID } from "node:crypto";
+import { resolve } from "node:path";
+import { downloadAttachments } from "./download.js";
 import { askCopilot, createConversation, getMaxTextMessageLength, type ConversationState } from "./copilot.js";
-import { buildPrompt, parseToolCalls } from "./prompt.js";
+import { buildPrompt } from "./prompt.js";
+import { requestTurn } from "./turn.js";
 
 import { COPILOT_MODELS, copilotTone } from "./models.js";
 
@@ -37,12 +40,14 @@ function isState(value: unknown, sessionId: string): value is ConversationState 
     typeof s.started === "boolean" && (s.conversationId === undefined || typeof s.conversationId === "string");
 }
 
-export default function extension(pi: ExtensionAPI) {
+export default function extension(pi: ExtensionAPI, transport = { askCopilot, createConversation }) {
+  let cwd = process.cwd();
   let state: ConversationState | undefined;
   let busy = false;
   const persist = () => { if (state) pi.appendEntry(STATE_ENTRY, { ...state }); };
 
   pi.on("session_start", (_event, ctx) => {
+    cwd = ctx.cwd;
     const sessionId = ctx.sessionManager.getSessionId();
     state = undefined;
     for (const entry of ctx.sessionManager.getBranch()) {
@@ -86,20 +91,40 @@ export default function extension(pi: ExtensionAPI) {
           if (busy) throw new Error("A Copilot request is already active in this pi session");
           busy = true;
           acquired = true;
+          const activeTools = new Set(pi.getActiveTools());
+          if (!context.tools?.length && activeTools.size) {
+            context = {
+              ...context,
+              tools: pi.getAllTools()
+                .filter(tool => activeTools.has(tool.name))
+                .map(({ name, description, parameters }) => ({ name, description, parameters })),
+            };
+          }
+          if (!context.tools?.length && activeTools.size) {
+            throw new Error("Copilot could not resolve schemas for Pi's active tools through either the request context or extension API.");
+          }
           stream.push({ type: "start", partial: output });
-          // Apply the local prompt ceiling without a config endpoint request.
+          // No local ceiling unless explicitly configured.
           const maxLength = getMaxTextMessageLength();
-          const prompt = buildPrompt(context, maxLength);
+          const prompt = buildPrompt(context, maxLength, cwd);
           state ??= newState(options?.sessionId ?? randomUUID());
           if (!state.conversationId) {
-            state.conversationId = await createConversation(token, options?.signal);
+            state.conversationId = await transport.createConversation(token, options?.signal);
             persist();
           }
-          const text = await askCopilot(token, state, prompt, tone, options?.signal);
-          state.started = true;
-          persist();
-          options?.signal?.throwIfAborted();
-          const calls = parseToolCalls(text, context.tools);
+          const conversation = state;
+          const lastUser = context.messages.map(message => message.role).lastIndexOf("user");
+          const hostAccessFailed = context.messages.slice(lastUser + 1).some(message =>
+            message.role === "toolResult" && message.isError &&
+            message.content.some(block => block.type === "text" && /ENOENT|EACCES|permission denied|no such file/i.test(block.text)));
+          const turn = await requestTurn(prompt, context.tools ?? [], async request => {
+            const text = await transport.askCopilot(token, conversation, request, tone, options?.signal);
+            conversation.started = true;
+            persist();
+            return text;
+          }, options?.signal, hostAccessFailed);
+          const calls = turn.calls;
+          let text = turn.text;
           if (calls) {
             output.stopReason = "toolUse";
             for (const call of calls) {
@@ -110,6 +135,8 @@ export default function extension(pi: ExtensionAPI) {
               stream.push({ type: "toolcall_end", contentIndex, toolCall: call, partial: output });
             }
           } else if (text) {
+            text = await downloadAttachments(text, resolve(cwd, "copilot-downloads", randomUUID()), options?.signal);
+            options?.signal?.throwIfAborted();
             output.content.push({ type: "text", text });
             stream.push({ type: "text_start", contentIndex: 0, partial: output });
             stream.push({ type: "text_delta", contentIndex: 0, delta: text, partial: output });
