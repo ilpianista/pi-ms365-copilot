@@ -1,5 +1,4 @@
 import WebSocket from "ws";
-import { attachmentLinks } from "./download.js";
 import { randomUUID } from "node:crypto";
 import type { CopilotTone } from "./models.js";
 
@@ -154,11 +153,7 @@ export async function askCopilot(token: string, state: ConversationState, text: 
           if (result?.value && result.value !== "Success") throw new Error(`Copilot: ${result.value}`);
           for (const item of [...(message.arguments?.[0]?.messages ?? []), ...(message.item?.messages ?? [])]) {
             if (item.author === "bot" && (!item.messageType || item.messageType === "Chat")) {
-              // File links can be carried in adaptive cards rather than the plain text snapshot.
-              let answer = typeof item.text === "string" ? item.text : "";
-              const existing = new Set(attachmentLinks(answer).map(link => link));
-              const extra = attachmentLinks(JSON.stringify(item.adaptiveCards ?? [])).filter(link => !existing.has(link));
-              if (extra.length) answer += `\n\nCopilot attachments:\n${extra.join("\n")}`;
+              const answer = typeof item.text === "string" ? item.text : "";
               if (answer) texts.set(item.messageId ?? item.id ?? "answer", answer);
             }
           }

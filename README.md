@@ -91,27 +91,4 @@ disable that local guardrail.
 
 The protocol is undocumented and Microsoft can change it.
 
-## Download generated files
-
-When Copilot returns generated-file links, the extension automatically downloads
-those files and appends their local paths to the reply. Links in response text and
-adaptive cards are supported. Files are saved under
-`copilot-downloads/<unique-response-id>/<attachment-number>/`, relative to Pi's
-working directory, so repeated filenames do not overwrite earlier downloads.
-Duplicate links within a response are downloaded once. Failed downloads leave the
-original answer intact and add a warning. Up to 16 files are downloaded per reply,
-with a two-minute total download deadline; cancelling the turn cancels downloads.
-
-The downloader uses the response's `Content-Disposition` filename, falling back to
-the filename in the link. It refuses unsafe/hidden filenames and existing files
-(including symlinks), saves with owner-only permissions, and limits each download
-to 50 MiB and 60 seconds. Successful downloads are reported to Pi with their local
-paths. Downloaded files are never executed automatically.
-
-Currently only the `se-prod.asyncgw.teams.microsoft.com` original-file endpoint
-observed in browser captures is supported. Redirects are refused and no Copilot
-token or cookies are sent. Expired links or downloads requiring additional
-authentication may fail; generate a fresh link or use the browser instead.
-Treat links as sensitive and inspect downloaded code before running it.
-
 Development checks: `npm run typecheck`.
