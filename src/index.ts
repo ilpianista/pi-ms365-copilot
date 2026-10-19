@@ -1,6 +1,6 @@
 import {
   createAssistantMessageEventStream,
-  type AssistantMessage, type OAuthCredentials, type OAuthLoginCallbacks,
+  type AssistantMessage,
 } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ProviderConfig } from "@earendil-works/pi-coding-agent";
 import dotenv from "dotenv";
@@ -10,6 +10,7 @@ import { buildPrompt } from "./prompt.js";
 import { requestTurn } from "./turn.js";
 
 import { COPILOT_MODELS, copilotTone } from "./models.js";
+import { promptToken } from "./auth.js";
 
 dotenv.config({ quiet: true });
 
@@ -20,12 +21,6 @@ const STATE_ENTRY = "ms365-copilot-conversation";
 
 function tokenFromEnv() {
   return process.env.MICROSOFT_365_COPILOT_ACCESS_TOKEN || process.env.MS365_COPILOT_ACCESS_TOKEN || "";
-}
-async function promptToken(callbacks: OAuthLoginCallbacks): Promise<OAuthCredentials> {
-  const access = (await callbacks.onPrompt({
-    message: "Paste your Microsoft 365 Copilot access token:", placeholder: "JWT access token", allowEmpty: false,
-  })).trim();
-  return { access, refresh: access, expires: Date.now() + 50 * 60 * 1000 };
 }
 
 function newState(piSessionId: string): ConversationState {
@@ -67,7 +62,10 @@ export default function extension(pi: ExtensionAPI, transport = { askCopilot, cr
     models: COPILOT_MODELS,
     oauth: {
       name: "Microsoft 365 Copilot", login: promptToken,
-      refreshToken: async c => ({ ...c, expires: Date.now() + 50 * 60 * 1000 }), getApiKey: c => c.access,
+      refreshToken: async () => {
+        throw new Error("Microsoft 365 Copilot access token expired. Run /login, select Microsoft 365 Copilot, and paste a fresh token.");
+      },
+      getApiKey: c => c.access,
     },
     streamSimple(model, context, options) {
       const stream = createAssistantMessageEventStream();

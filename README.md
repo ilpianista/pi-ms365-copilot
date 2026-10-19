@@ -26,7 +26,7 @@ For interactive use, log in once from inside `pi`:
 
 Then select **Microsoft 365 Copilot** from the OAuth provider list. (Direct `/login ms365-copilot` is currently treated as a regular prompt sent to the agent by pi. Use bare `/login` instead.)
 
-Alternatively set `MICROSOFT_365_COPILOT_ACCESS_TOKEN`. The token is a short-lived Entra token intended for `https://substrate.office.com/sydney`, not a consumer Copilot token. Conversation IDs are managed automatically per Pi session and restored when you resume it. New sessions, forks, and tree navigation start separate conversations. The extension requests a new conversation, falling back to a generated ID if that endpoint returns HTTP 404.
+Alternatively set `MICROSOFT_365_COPILOT_ACCESS_TOKEN`. The token is a short-lived Entra token intended for `substrate.office.com`, not a consumer Copilot token. Access tokens are typically valid for approximately 1 hour, after which re-authentication or token refresh may be required. Conversation IDs are managed automatically per Pi session and restored when you resume it. New sessions, forks, and tree navigation start separate conversations. The extension requests a new conversation, falling back to a generated ID if that endpoint returns HTTP 404.
 
 ## Models / tones
 
