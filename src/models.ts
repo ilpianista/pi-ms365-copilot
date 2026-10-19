@@ -1,4 +1,4 @@
-import type { ProviderConfig } from "@mariozechner/pi-coding-agent";
+import type { ProviderConfig } from "@earendil-works/pi-coding-agent";
 
 // Routing values observed in the browser, not verified underlying model identities.
 const routes = [

@@ -1,4 +1,4 @@
-import type { Tool, ToolCall } from "@mariozechner/pi-ai";
+import type { Tool, ToolCall } from "@earendil-works/pi-ai";
 import { parseToolCalls } from "./prompt.js";
 
 export type CopilotTurn = { calls: ToolCall[]; text?: never } | { text: string; calls?: never };

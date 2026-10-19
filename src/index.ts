@@ -1,8 +1,8 @@
 import {
   createAssistantMessageEventStream,
   type AssistantMessage, type OAuthCredentials, type OAuthLoginCallbacks,
-} from "@mariozechner/pi-ai";
-import type { ExtensionAPI, ProviderConfig } from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-ai";
+import type { ExtensionAPI, ProviderConfig } from "@earendil-works/pi-coding-agent";
 import dotenv from "dotenv";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";

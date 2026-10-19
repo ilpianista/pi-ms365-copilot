@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Context, Message, Tool, ToolCall } from "@mariozechner/pi-ai";
+import type { Context, Message, Tool, ToolCall } from "@earendil-works/pi-ai";
 
 const TOOL_INSTRUCTIONS = `You are the reasoning backend for the pi coding agent. Local tools are executed by the pi host, not by Copilot.
 The repository exists on the pi host. Copilot's own sandbox, Python, /mnt/data, web search and file attachments are NOT that host and cannot establish whether its files exist.
