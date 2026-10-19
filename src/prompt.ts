@@ -87,7 +87,16 @@ export function parseToolCalls(text: string, tools: Tool[] = []): ToolCall[] | u
   if (!/^\{\s*"pi_tool_calls"\s*:/.test(body)) return undefined;
   let value: unknown;
   try { value = JSON.parse(body); }
-  catch { throw new Error("Copilot returned malformed tool-call JSON"); }
+  catch {
+    const commandMatch = body.match(/^\{"pi_tool_calls":\[\{"name":"([^"]+)","arguments":\{"command":"([\s\S]*)"\}\}\]\}$/);
+    if (!commandMatch) throw new Error("Copilot returned malformed tool-call JSON");
+    value = {
+      pi_tool_calls: [{
+        name: commandMatch[1],
+        arguments: { command: commandMatch[2] },
+      }],
+    };
+  }
   const envelope = value as { pi_tool_calls?: unknown };
   if (Object.keys(envelope).length !== 1 || !Array.isArray(envelope.pi_tool_calls) ||
       envelope.pi_tool_calls.length === 0 || envelope.pi_tool_calls.length > 16) {
