@@ -3,10 +3,10 @@ import type { ProviderConfig } from "@earendil-works/pi-coding-agent";
 // Routing values observed in the browser, not verified underlying model identities.
 const routes = [
   { id: "copilot", name: "Auto", tone: "Magic", reasoning: false },
-  { id: "copilot-quick", name: "Quick", tone: "Chat", reasoning: false },
-  { id: "copilot-deeper", name: "Think Deeper", tone: "Reasoning", reasoning: true },
-  { id: "copilot-sol-quick", name: "SOL Quick", tone: "Gpt_5_6_Chat", reasoning: false },
-  { id: "copilot-sol-think", name: "SOL Think", tone: "Gpt_5_6_Reasoning", reasoning: true },
+  { id: "copilot-quick", name: "Quick response", tone: "Chat", reasoning: false },
+  { id: "copilot-deeper", name: "Think deeper", tone: "Reasoning", reasoning: true },
+  { id: "copilot-sol-quick", name: "SOL Quick response", tone: "Gpt_5_6_Chat", reasoning: false },
+  { id: "copilot-sol-think", name: "SOL Think deeper", tone: "Gpt_5_6_Reasoning", reasoning: true },
 ] as const;
 
 export type CopilotTone = typeof routes[number]["tone"];

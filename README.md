@@ -35,10 +35,10 @@ Select a tone using Pi's `/model` picker. All IDs below use the `ms365-copilot/`
 | Model ID | Choice | Copilot wire `tone` |
 | --- | --- | --- |
 | `copilot` | Auto (existing/default ID) | `Magic` |
-| `copilot-quick` | Quick | `Chat` |
-| `copilot-deeper` | Think Deeper | `Reasoning` |
-| `copilot-sol-quick` | SOL Quick | `Gpt_5_6_Chat` |
-| `copilot-sol-think` | SOL Think | `Gpt_5_6_Reasoning` |
+| `copilot-quick` | Quick response | `Chat` |
+| `copilot-deeper` | Think deeper | `Reasoning` |
+| `copilot-sol-quick` | SOL Quick response | `Gpt_5_6_Chat` |
+| `copilot-sol-think` | SOL Think deeper | `Gpt_5_6_Reasoning` |
 
 These aren't guarantees of a particular underlying model version. Availability and actual routing depend on Microsoft and your account.
 
